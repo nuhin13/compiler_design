@@ -7,11 +7,17 @@ let lexer = (sourceCode) => {
                 return { type: 'assignment' };
             } else if (token === 'jug') {
                 return { type: 'operator', value: '+' };
+            }else if(token === 'biyok'){
+                return { type: 'operator', value: '-' };
+            }else if(token === 'bhagshesh'){
+                return { type: 'operator', value: '%' };
             } else if (token === 'shera') {
                 return { type: 'print' };
-            } else if (token === 'to') {
+            } else if (token === 'to' || token === 'sathe') {
                 return { type: 'to' };
-            } else if (isNaN(token)) {
+            } else if (token === 'jodi') {
+                return { type: 'condition', value: token };
+            }else if (isNaN(token)) {
                 return { type: 'variable', value: token };
             } else if (!isNaN(token)) {
                 return { type: 'value', value: parseInt(token) };
@@ -26,11 +32,20 @@ function parser(tokens) {
         type: 'Program',
         statements: tokens.map(line => {
             if (line[0].type === 'assignment') {
-                // check syntax
-                return { type: 'assignment', lhs: line[3].value, rhs: line[1].value };
+                return { type: 'assignment', lhs: line[1].value, rhs: line[3].value };
             } else if (line[0].type === 'operator') {
-                return { type: 'operator', value: '+', lhs: line[3].value, rhs: line[1].value };
-            } else if (line[0].type === 'print') {
+                if(line[0].value ==='+'){
+                    return { type: 'operator', value: '+', lhs: line[1].value, rhs: line[3].value };
+                }else if(line[0].value ==='-'){
+                    return { type: 'operator', value: '-', lhs: line[1].value, rhs: line[3].value };
+                }
+                else if(line[0].value ==='%'){
+                    return { type: 'operator', value: '%', lhs: line[1].value, rhs: line[3].value };
+                }
+
+            }else if (line[0].type === 'condition') {
+                return { type: 'condition', value: 'if', lhs: line[1].value, rhs: line[3].value };
+            }else if (line[0].type === 'print') {
                 return { type: 'print', lhs: line[1].value };
             }
         }),
@@ -61,17 +76,32 @@ function generator(ast) {
     targetCode += `define i32 @main() {\n`;
 
     let tempCounter = 0;
-
+    let assignment = 0;
+    let variable =`t${tempCounter}`;
+    let variable2 =`t${tempCounter++}`;
     ast.statements.forEach(statement => {
         if (statement.type === 'assignment') {
-            targetCode += `%${statement.lhs} = alloca i32\n`;
-            targetCode += `store i32 ${statement.rhs}, i32* %${statement.lhs}\n`;
+            if(assignment > 0){
+                targetCode += `%${statement.lhs} = alloca i32\n`;
+                targetCode += `store i32 ${variable2}, i32* %${statement.lhs}\n`;
+            }else {
+                targetCode += `%${statement.lhs} = alloca i32\n`;
+                targetCode += `store i32 ${statement.rhs}, i32* %${statement.lhs}\n`;
+            }
+            assignment++;
         } else if (statement.type === 'operator') {
-            let t1 = `%t${tempCounter++}`;
-            let t2 = `%t${tempCounter++}`;
-            targetCode += `${t1} = load i32, i32* %${statement.lhs}\n`;
-            targetCode += `${t2} = add i32 %t0, ${statement.rhs}\n`;
-            targetCode += `store i32 ${t2}, i32* %${statement.lhs}\n`;
+            variable = `%t${tempCounter++}`;
+            variable2 = `%t${tempCounter++}`;
+            targetCode += `${variable} = load i32, i32* %${statement.lhs}\n`;
+            if(statement.value ==='+'){
+                targetCode += `${variable2} = add i32 ${variable}, ${statement.rhs}\n`;
+            }else if(statement.value ==='-'){
+                targetCode += `${variable2} = sub i32 ${variable}, ${statement.rhs}\n`;
+            }
+            else if(statement.value ==='%'){
+                targetCode += `${variable2} = srem i32 ${variable}, ${statement.rhs}\n`;
+            }
+            targetCode += `store i32 ${variable2}, i32* %${statement.lhs}\n`;
         } else if (statement.type === 'print') {
             let r1 = `%t${tempCounter++}`;
             targetCode += `${r1} = load i32, i32* %${statement.lhs}\n`;
@@ -106,7 +136,7 @@ function build(targetCode) {
 }
 
 function main() {
-    let sourceCode = fs.readFileSync('./test.boss', 'utf8');
+    let sourceCode = fs.readFileSync('test.boss', 'utf8');
     let tokens = lexer(sourceCode);
     console.log(tokens);
     console.log("============================\n\n");

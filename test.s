@@ -1,35 +1,58 @@
 	.text
+	.def	@feat.00;
+	.scl	3;
+	.type	0;
+	.endef
+	.globl	@feat.00
+.set @feat.00, 0
 	.file	"test.ll"
+	.def	main;
+	.scl	2;
+	.type	32;
+	.endef
 	.globl	main                            # -- Begin function main
 	.p2align	4, 0x90
-	.type	main,@function
 main:                                   # @main
-	.cfi_startproc
+.seh_proc main
 # %bb.0:
-	pushq	%rax
-	.cfi_def_cfa_offset 16
-	movl	$20, 4(%rsp)
-	movl	4(%rsp), %eax
-	addl	$30, %eax
-	movl	%eax, 4(%rsp)
-	movl	4(%rsp), %esi
-	leaq	.L.str(%rip), %rdi
-	movb	$0, %al
-	callq	printf@PLT
+	subq	$56, %rsp
+	.seh_stackalloc 56
+	.seh_endprologue
+	movl	$80, 52(%rsp)
+	movl	52(%rsp), %eax
+	subl	$30, %eax
+	movl	%eax, 36(%rsp)                  # 4-byte Spill
+	movl	%eax, 52(%rsp)
+	movl	52(%rsp), %edx
+	leaq	.L.str(%rip), %rcx
+	callq	printf
+                                        # kill: def $ecx killed $eax
+	movl	36(%rsp), %eax                  # 4-byte Reload
+	movl	%eax, 48(%rsp)
+	movl	48(%rsp), %eax
+	subl	$10, %eax
+	movl	%eax, 40(%rsp)                  # 4-byte Spill
+	movl	%eax, 48(%rsp)
+	movl	48(%rsp), %edx
+	leaq	.L.str(%rip), %rcx
+	callq	printf
+                                        # kill: def $ecx killed $eax
+	movl	40(%rsp), %eax                  # 4-byte Reload
+	movl	%eax, 44(%rsp)
+	movl	44(%rsp), %eax
+	addl	$20, %eax
+	movl	%eax, 44(%rsp)
+	movl	44(%rsp), %edx
+	leaq	.L.str(%rip), %rcx
+	callq	printf
 	xorl	%eax, %eax
-	popq	%rcx
-	.cfi_def_cfa_offset 8
+	addq	$56, %rsp
 	retq
-.Lfunc_end0:
-	.size	main, .Lfunc_end0-main
-	.cfi_endproc
+	.seh_endproc
                                         # -- End function
-	.type	.L.str,@object                  # @.str
-	.section	.rodata.str1.1,"aMS",@progbits,1
-.L.str:
+	.section	.rdata,"dr"
+.L.str:                                 # @.str
 	.asciz	"%d\n"
-	.size	.L.str, 4
 
-	.section	".note.GNU-stack","",@progbits
 	.addrsig
 	.addrsig_sym printf

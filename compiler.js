@@ -42,9 +42,8 @@ function parser(tokens) {
                 else if(line[0].value ==='%'){
                     return { type: 'operator', value: '%', lhs: line[1].value, rhs: line[3].value };
                 }
-
             }else if (line[0].type === 'condition') {
-                return { type: 'condition', value: 'if', lhs: line[1].value, rhs: line[3].value };
+                return { type: 'condition', value: 'if', lhs: line[1].value, rhs: line[3].value, mdl: line[2].value };
             }else if (line[0].type === 'print') {
                 return { type: 'print', lhs: line[1].value };
             }
@@ -102,7 +101,7 @@ function generator(ast) {
                 targetCode += `${variable2} = srem i32 ${variable}, ${statement.rhs}\n`;
             }
             targetCode += `store i32 ${variable2}, i32* %${statement.lhs}\n`;
-        } else if (statement.type === 'print') {
+        }else if (statement.type === 'print') {
             let r1 = `%t${tempCounter++}`;
             targetCode += `${r1} = load i32, i32* %${statement.lhs}\n`;
             targetCode += `call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([4 x i8], [4 x i8]* @.str, i64 0, i64 0), i32 ${r1})\n`;

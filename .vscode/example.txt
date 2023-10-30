@@ -1,0 +1,8 @@
+---------
+sat a to 80
+biyok a to 30
+shera a
+sat b to a
+biyok b sathe 10
+shera b
+--------------

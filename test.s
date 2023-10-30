@@ -1,35 +1,40 @@
 	.text
+	.def	@feat.00;
+	.scl	3;
+	.type	0;
+	.endef
+	.globl	@feat.00
+.set @feat.00, 0
 	.file	"test.ll"
+	.def	main;
+	.scl	2;
+	.type	32;
+	.endef
 	.globl	main                            # -- Begin function main
 	.p2align	4, 0x90
-	.type	main,@function
 main:                                   # @main
-	.cfi_startproc
+.seh_proc main
 # %bb.0:
-	pushq	%rax
-	.cfi_def_cfa_offset 16
-	movl	$20, 4(%rsp)
-	movl	4(%rsp), %eax
-	addl	$30, %eax
-	movl	%eax, 4(%rsp)
-	movl	4(%rsp), %esi
-	leaq	.L.str(%rip), %rdi
-	movb	$0, %al
-	callq	printf@PLT
+	subq	$40, %rsp
+	.seh_stackalloc 40
+	.seh_endprologue
+	movl	$10, 36(%rsp)
+	movl	36(%rsp), %eax
+	movl	$2, %ecx
+	cltd
+	idivl	%ecx
+	movl	%edx, 36(%rsp)
+	movl	36(%rsp), %edx
+	leaq	.L.str(%rip), %rcx
+	callq	printf
 	xorl	%eax, %eax
-	popq	%rcx
-	.cfi_def_cfa_offset 8
+	addq	$40, %rsp
 	retq
-.Lfunc_end0:
-	.size	main, .Lfunc_end0-main
-	.cfi_endproc
+	.seh_endproc
                                         # -- End function
-	.type	.L.str,@object                  # @.str
-	.section	.rodata.str1.1,"aMS",@progbits,1
-.L.str:
+	.section	.rdata,"dr"
+.L.str:                                 # @.str
 	.asciz	"%d\n"
-	.size	.L.str, 4
 
-	.section	".note.GNU-stack","",@progbits
 	.addrsig
 	.addrsig_sym printf
